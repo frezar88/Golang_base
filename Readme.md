@@ -99,6 +99,7 @@ case 2:
 
 ``` 
 fClosure := closure()
+
 fmt.Println(fClosure(10)) //10
 fmt.Println(fClosure(10)) //20
 
