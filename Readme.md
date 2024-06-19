@@ -165,9 +165,9 @@ func add(values ...int) int {
 Копирование слайсов
 
 ```
-	slice1 := []int{1, 2, 3}
-	slice2 := make([]int, len(slice1))
-	copy(slice2, slice1)
+slice1 := []int{1, 2, 3}
+slice2 := make([]int, len(slice1))
+copy(slice2, slice1)
 ```
 
 <hr/>
@@ -581,18 +581,18 @@ Type switch (тайп свитч) используется для выполне
 становится известен только во время выполнения.
 
 ```
-	var i interface{} = "hello"
+var i interface{} = "hello"
 
-	switch v := i.(type) {
-	case int:
-		fmt.Printf("Integer: %d\n", v)
-	case string:
-		fmt.Printf("String: %s\n", v)
-	case bool:
-		fmt.Printf("Boolean: %t\n", v)
-	default:
-		fmt.Printf("Unknown type\n")
-	}
+switch v := i.(type) {
+case int:
+    fmt.Printf("Integer: %d\n", v)
+case string:
+    fmt.Printf("String: %s\n", v)
+case bool:
+    fmt.Printf("Boolean: %t\n", v)
+default:
+    fmt.Printf("Unknown type\n")
+}
 ```
 
 <hr/>
