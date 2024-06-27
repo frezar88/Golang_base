@@ -250,6 +250,20 @@ for i, r := range runes {
 }
 ```
 
+Развернуть строку 
+
+```
+func reversString(str string) string {
+	runes := []rune(str)
+	n := len(runes)
+
+	for i := 0; i < n/2; i++ {
+		runes[i], runes[n-1-i] = runes[n-1-i], runes[i]
+	}
+	return string(runes)
+}
+```
+
 <hr/>
 
 ## Каналы
@@ -876,3 +890,236 @@ logger := slog.New(slog.NewJSONHandler(os.Stdout, opts))
 logger.Info("222", slog.String("version", "2222"))
 
 ```
+
+<hr/>
+
+## Переменные окружения
+Читать значение переменной
+```
+value := os.Getenv("PORT")
+```
+Запуск приложения с переменными окружения
+```
+PORT=2000 go run cmd/main.go
+```
+<hr/>
+
+## .ENV file
+### VIPER
+Установка 
+```
+go get github.com/spf13/viper
+```
+Пример конфига 
+```
+package config
+
+import (
+	"errors"
+	"github.com/spf13/viper"
+)
+
+var EnvConfigs *envConfigs
+
+func InitEnvConfigs() {
+	EnvConfigs = loadEnvVariables()
+}
+
+type envConfigs struct {
+	LocalServerPort string `mapstructure:"LOCAL_SERVER_PORT"`
+	SecretKey       string `mapstructure:"SECRET_KEY"`
+}
+
+func loadEnvVariables() (config *envConfigs) {
+	viper.SetConfigFile(".env")
+	if err := viper.ReadInConfig(); err != nil {
+		panic(errors.New("not found env file"))
+	}
+	if err := viper.Unmarshal(&config); err != nil {
+		panic(errors.New("error read env file"))
+	}
+	return
+}
+
+
+
+package main
+
+import (
+	"fmt"
+	"golang_base/internal/config"
+)
+
+func main() {
+	config.InitEnvConfigs()
+	fmt.Println(config.EnvConfigs)
+}
+```
+
+## godotenv
+
+Установка
+```
+go get github.com/joho/godotenv
+```
+Пример конфига 
+```
+package config
+
+import (
+	"fmt"
+	"github.com/joho/godotenv"
+	"os"
+	"strconv"
+)
+
+var EnvConfigs *envConfigs
+
+func InitEnvConfigs() {
+	EnvConfigs = loadEnvVariables()
+}
+
+type envConfigs struct {
+	AppConfig appConfig
+	Redis     redisConfig
+}
+type redisConfig struct {
+	RedisHost string
+	RedisPort int
+}
+type appConfig struct {
+	FilePath   string
+	ServerPort string
+}
+
+func loadEnvVariables() (config *envConfigs) {
+	if err := godotenv.Load(); err != nil {
+		panic("No .env file found")
+	}
+	return &envConfigs{
+		Redis: redisConfig{
+			RedisHost: getEnv("REDIS_HOST"),
+			RedisPort: getEnvAsInt("REDIS_PORT"),
+		},
+		AppConfig: appConfig{
+			ServerPort: getEnv("SECRET_KEY"),
+		},
+	}
+}
+func getEnv(key string) string {
+	if value, exists := os.LookupEnv(key); exists {
+		return value
+	}
+	panic(fmt.Sprintf("variable  %s not found in .env file", key))
+}
+
+func getEnvAsInt(name string) int {
+	valueStr := getEnv(name)
+	if value, err := strconv.Atoi(valueStr); err == nil {
+		return value
+	}
+	panic(fmt.Sprintf("variable  %s not found in .env file", name))
+}
+
+
+package main
+
+import (
+	"fmt"
+	"golang_base/internal/config"
+)
+
+func main() {
+	config.InitEnvConfigs()
+
+	fmt.Println(config.EnvConfigs)
+}
+
+
+```
+
+<hr/>
+
+# Benchmakring
+
+- Бенчмарки определяются в файлах с тестами, обычно имеющих суффикс ___test.go__
+- Функции бенчмарков должны начинаться с Benchmark и принимать параметр ___*testing.B.___
+
+Запуск бенчмарков
+```
+ go test ./... -bench .
+```
+
+Полезные флаги для бенчмарков
+- __-benchtime :__ Устанавливает время выполнения бенчмарка, например: ```go test ./... -bench . -benchtime=10s```
+- __-benchmem :__ Показывает распределение памяти для каждого бенчмарка. например: ```go test ./... -bench . -benchmem```
+- __\> old.txt :__ Записать результат выполнения  бенчмарка. например: ```go test ./... -bench . -benchmem > old.txt```
+
+
+Пример бенчмарка
+```
+package main
+
+import (
+    "testing"
+)
+
+func BenchmarkConcatStrings(b *testing.B) {
+    for i := 0; i < b.N; i++ {
+        ConcatStrings("Hello", "World")
+    }
+}
+
+package main
+
+func ConcatStrings(a, b string) string {
+    return a + b
+}
+```
+
+Функции внутри бенчмарков
+
+- 	b.ResetTimer() - Скидывает отсчёт времени выполнения
+- 	b.StopTimer() - Останавливает таймер выполнения
+- 	b.StartTimer() - Продолжает таймер выполнения
+
+##### Benhchstat
+Утилита для сравнения двух результатов бенчмарков сохранённых в файле
+
+Установка
+```
+go install golang.org/x/perf/cmd/benchstat@latest
+```
+Запуск
+```
+benchstat old.txt new.txt
+```
+
+<hr/>
+
+# Profiling (Профилирование)
+
+Работает по аналогии с бенчмарками 
+
+Для просмотра требуется установить __graphviz__
+```
+sudo apt-get install graphviz
+```
+
+
+Запуск
+```
+ go test ./internal/my_sum/ -bench . -benchmem -cpuprofile=cpu_package1.prof -memprofile=mem_package1.prof
+```
+
+Посмотреть результат (если выдаёт ошибку, скорее всего слишком быстрый бенч и нажно добавить время выполнения -benchtime=1s)
+```
+go tool pprof -http=localhost:9192 cpu_package1.prof
+```
+<hr/>
+
+# Архитектура проекта 
+```
+https://github.com/golang-standards/project-layout/blob/master/README_ru.md
+```
+<hr/>
