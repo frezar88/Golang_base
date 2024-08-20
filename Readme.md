@@ -3,7 +3,7 @@
 ## Build Project
 
 ```bash 
- go build -ldflags="-s -w" -o appName;
+go build  -ldflags="-s -w" -o appName1 cmd/url-shortener/main.go;
 ```
 
 <hr/>
