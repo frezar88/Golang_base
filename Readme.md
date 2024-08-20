@@ -888,7 +888,11 @@ opts := &slog.HandlerOptions{
 }
 logger := slog.New(slog.NewJSONHandler(os.Stdout, opts))
 logger.Info("222", slog.String("version", "2222"))
+```
 
+Добавить кастомный ключ к всем логам 
+```
+logger = log.With(slog.String("env", cfg.Env))
 ```
 
 <hr/>
@@ -1123,3 +1127,32 @@ go tool pprof -http=localhost:9192 cpu_package1.prof
 https://github.com/golang-standards/project-layout/blob/master/README_ru.md
 ```
 <hr/>
+
+
+# Struct tags
+
+__Struct tags__ - используются для аннотации полей структуры дополнительной метаинформацией. Эти теги часто используются для управления поведением сериализации и десериализации, валидации данных и другими целями. Теги присоединяются к полям структуры с помощью обратных кавычек (``).
+
+### Пример с JSON
+```
+type Person struct {
+    Name string `json:"name"`
+    Age  int    `json:"age,omitempty"`
+}
+```
+
+В этом примере:
+
+- Тег json:"name" указывает, что поле Name будет сериализовано и десериализовано как name.
+- Тег json:"age,omitempty" указывает, что поле Age будет сериализовано как age, но будет опущено в JSON, если значение поля равно нулевому значению типа (для int это 0).
+
+### Синтаксис и правила
+
+Структурные теги состоят из ключей и значений, разделенных двоеточием и заключенных в обратные кавычки. Значения заключены в двойные кавычки.
+
+```
+type Example struct {
+    Field1 string `json:"field1" xml:"field1"`
+    Field2 int    `json:"field2,omitempty"`
+}
+```
